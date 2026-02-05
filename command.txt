@@ -1,0 +1,7 @@
+mvn clean package
+mvn spring-boot:run
+mvn spring-boot:stop
+
+
+docker portainer:
+docker run -d -p 9000:9000 --name portainer --restart=always  -v /var/run/docker.sock:/var/run/docker.sock -v  portainer_data:/data portainer/portainer
