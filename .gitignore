@@ -1,0 +1,16 @@
+# Compiled class files
+**/target/
+
+# Maven
+.mvn/
+/.settings/
+
+# Gradle
+/.gradle/
+
+# IDEs
+.idea/
+*.iml
+
+# OS files
+.DS_Store
