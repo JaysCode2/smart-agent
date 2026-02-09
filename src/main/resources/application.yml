@@ -2,11 +2,96 @@ spring:
   application:
     name: smart-agent
 
-server:
-  port: 8080
+  # 数据库核心配置（修复编码/时区/连接参数，适配MySQL8.0.45）
+  datasource:
+    url: jdbc:mysql://localhost:3306/smart_agent?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&characterEncoding=utf8&useUnicode=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # Hikari连接池配置（生产级优化，适配高并发）
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 900000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      pool-name: SmartAgentHikariPool
 
+  # MyBatis Plus 配置（ORM核心，开启SQL日志/下划线转驼峰）
+  mybatis-plus:
+    type-aliases-package: com.example.smartagent.entity
+    mapper-locations: classpath*:/mapper/**/*.xml
+    configuration:
+      map-underscore-to-camel-case: true
+      default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    global-config:
+      db-config:
+        id-type: auto
+        logic-delete-field: isDeleted
+        logic-delete-value: 1
+        logic-not-delete-value: 0
+
+  # Spring Session 配置（JDBC存储，30分钟超时，自动建表）
+  session:
+    store-type: jdbc
+    timeout: 1800
+    jdbc:
+      initialize-schema: always
+      table-name: SPRING_SESSION
+      schema: classpath:org/springframework/session/jdbc/schema-mysql.sql
+
+  # Spring Security 基础配置
+  security:
+    filter:
+      order: 5
+    user:
+      name: admin
+      password: admin123
+
+# 服务器配置
+server:
+  port: 8089
+  servlet:
+    session:
+      timeout: 1800
+      cookie:
+        name: SMART_AGENT_SESSION
+        http-only: true
+        secure: false
+        path: /
+        max-age: 1800
+
+# 监控配置
 management:
   endpoints:
     web:
       exposure:
-        include: "health,info"
+        include: "health,info,metrics"
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: false
+
+# Knife4j 接口文档配置（OpenAPI3，适配Spring Boot3）
+knife4j:
+  enable: true
+  openapi:
+    title: smart-agent 用户认证系统接口文档
+    description: 包含用户注册/登录/会话管理等核心接口
+    version: 1.0.0
+    contact:
+      name: 开发人员Jay
+      email: 2636667032@qq.com
+    license:
+      name: Apache 2.0
+      url: https://www.apache.org/licenses/LICENSE-2.0.html
+  # 界面优化配置
+  setting:
+    language: zh-CN
+    enable-swagger-models: true
+    swagger-models-expand: true
